@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>IntegrityCheck — AI & Plagiarism Detection</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --blue:#009bde;--blue-dk:#0078b0;--blue-lt:#d6f0fb;
+  --red:#e8452c;--green:#5ba829;--orange:#f5a623;--purple:#7b3fa0;
+  --bg:#090e14;--card:rgba(255,255,255,0.04);--border:rgba(255,255,255,0.08);
+  --text:#f0f4f8;--muted:rgba(255,255,255,0.45);--line:rgba(255,255,255,0.07);
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* mesh bg */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 70% 55% at 15% 15%,rgba(0,155,222,0.16) 0%,transparent 65%),
+    radial-gradient(ellipse 55% 45% at 88% 82%,rgba(123,63,160,0.13) 0%,transparent 60%),
+    radial-gradient(ellipse 40% 35% at 55% 40%,rgba(0,155,222,0.06) 0%,transparent 50%);
+}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 48px;
+  background:rgba(9,14,20,0.82);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--line);
+}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-badge{
+  width:34px;height:34px;background:var(--blue);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:900;color:#fff;letter-spacing:-1px;
+}
+.logo-name{font-size:16px;font-weight:700;color:#fff}
+.logo-name span{color:var(--blue)}
+.nav-right{display:flex;align-items:center;gap:28px}
+.nav-right a{color:var(--muted);font-size:13.5px;font-weight:500;text-decoration:none;transition:color .2s}
+.nav-right a:hover{color:#fff}
+.nav-cta{
+  background:var(--blue);color:#fff;border:none;
+  padding:9px 20px;border-radius:8px;font-size:13.5px;font-weight:600;
+  cursor:pointer;font-family:inherit;transition:background .2s,transform .15s;
+}
+.nav-cta:hover{background:var(--blue-dk);transform:translateY(-1px)}
+
+/* ── HERO ── */
+.hero{
+  position:relative;z-index:1;
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
+  padding:110px 24px 70px;
+}
+.badge{
+  display:inline-flex;align-items:center;gap:7px;
+  background:rgba(0,155,222,0.1);border:1px solid rgba(0,155,222,0.28);
+  border-radius:100px;padding:5px 15px;
+  font-size:11.5px;font-weight:600;color:var(--blue);
+  letter-spacing:.6px;text-transform:uppercase;margin-bottom:28px;
+  animation:up .55s ease both;
+}
+.badge-dot{width:6px;height:6px;background:var(--blue);border-radius:50%}
+h1{
+  font-family:'DM Serif Display',serif;
+  font-size:clamp(2.6rem,5.5vw,4.6rem);line-height:1.08;
+  letter-spacing:-.8px;margin-bottom:22px;
+  animation:up .55s .1s ease both;
+}
+h1 em{
+  font-style:normal;
+  background:linear-gradient(130deg,var(--blue) 20%,#60dcff 80%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero-sub{
+  font-size:1.08rem;color:var(--muted);max-width:520px;
+  line-height:1.72;margin-bottom:44px;
+  animation:up .55s .18s ease both;
+}
+
+/* stats */
+.stats{display:flex;gap:44px;margin-bottom:52px;animation:up .55s .26s ease both}
+.stat .n{font-family:'DM Serif Display',serif;font-size:2rem;color:var(--blue)}
+.stat .l{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* ── UPLOAD CARD ── */
+.upload-wrap{width:100%;max-width:660px;animation:up .55s .32s ease both}
+.drop-card{
+  background:rgba(255,255,255,0.03);
+  border:2px dashed rgba(0,155,222,0.3);
+  border-radius:22px;padding:50px 36px;
+  cursor:pointer;position:relative;overflow:hidden;
+  transition:border-color .25s,background .25s;
+}
+.drop-card::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 70% 50% at 50% -10%,rgba(0,155,222,0.07),transparent);
+}
+.drop-card.over{border-color:var(--blue);background:rgba(0,155,222,0.07)}
+.upload-icon{
+  width:62px;height:62px;margin:0 auto 18px;
+  background:linear-gradient(135deg,rgba(0,155,222,0.18),rgba(0,155,222,0.04));
+  border:1.5px solid rgba(0,155,222,0.28);border-radius:16px;
+  display:flex;align-items:center;justify-content:center;font-size:26px;
+}
+.drop-card h3{font-size:1.15rem;font-weight:600;margin-bottom:7px}
+.drop-card .sub{font-size:.88rem;color:var(--muted)}
+.drop-card .fmt{font-size:.76rem;color:rgba(255,255,255,0.28);margin-top:5px}
+#fi{display:none}
+.btn-browse{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--blue);color:#fff;border:none;
+  padding:12px 30px;border-radius:10px;font-size:14.5px;font-weight:600;
+  cursor:pointer;margin-top:22px;font-family:inherit;
+  box-shadow:0 4px 22px rgba(0,155,222,0.32);
+  transition:background .2s,transform .15s,box-shadow .2s;
+}
+.btn-browse:hover{background:var(--blue-dk);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,155,222,0.42)}
+
+/* progress */
+.prog-wrap{margin-top:26px;display:none}
+.prog-bg{height:5px;background:rgba(255,255,255,0.07);border-radius:99px;overflow:hidden}
+.prog-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--blue),#60dcff);border-radius:99px;transition:width .3s}
+.prog-txt{font-size:12.5px;color:var(--muted);margin-top:9px;text-align:center}
+
+/* ── RESULTS ── */
+#results{display:none;width:100%;max-width:780px;margin:0 auto;position:relative;z-index:2}
+.res-title{text-align:center;margin-bottom:28px}
+.res-title h2{font-family:'DM Serif Display',serif;font-size:1.9rem;margin-bottom:6px}
+.res-title p{font-size:.88rem;color:var(--muted)}
+
+/* meta strip */
+.meta-strip{
+  display:flex;flex-wrap:wrap;gap:24px;
+  background:rgba(255,255,255,0.03);border:1px solid var(--border);
+  border-radius:13px;padding:18px 22px;margin-bottom:20px;
+}
+.mi .k{font-size:10.5px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px}
+.mi .v{font-size:13.5px;font-weight:500}
+
+/* score grid */
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+.sc{
+  background:rgba(255,255,255,0.04);border:1px solid var(--border);
+  border-radius:16px;padding:26px 26px 22px;position:relative;overflow:hidden;
+}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:3px 3px 0 0}
+.sc.sim::before{background:var(--red)}
+.sc.ai::before{background:var(--blue)}
+.sc .lbl{font-size:10.5px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.sc .big{font-family:'DM Serif Display',serif;font-size:3.4rem;line-height:1}
+.sc.sim .big{color:var(--red)}
+.sc.ai  .big{color:var(--blue)}
+.sub-row{display:flex;gap:18px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.ss .v{font-size:1.05rem;font-weight:700}
+.ss .l{font-size:10px;color:var(--muted);margin-top:2px}
+.ss.i .v{color:var(--green)}
+.ss.p .v{color:var(--purple)}
+.ss.s .v{color:var(--orange)}
+.ai-prog{height:8px;background:rgba(255,255,255,0.07);border-radius:99px;margin-top:14px;overflow:hidden}
+.ai-prog-fill{height:100%;background:linear-gradient(90deg,var(--blue),#60dcff);border-radius:99px;width:0%;transition:width 1.1s cubic-bezier(.4,0,.2,1)}
+.ai-note{font-size:11.5px;color:var(--muted);margin-top:9px}
+
+/* downloads */
+.dl-row{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.dl-btn{
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  padding:15px;border-radius:12px;font-size:13.5px;font-weight:600;
+  border:1.5px solid;text-decoration:none;cursor:pointer;
+  transition:all .2s;
+}
+.dl-btn.sim{background:rgba(232,69,44,.07);border-color:rgba(232,69,44,.3);color:var(--red)}
+.dl-btn.sim:hover{background:rgba(232,69,44,.14);transform:translateY(-2px)}
+.dl-btn.ai{background:rgba(0,155,222,.07);border-color:rgba(0,155,222,.3);color:var(--blue)}
+.dl-btn.ai:hover{background:rgba(0,155,222,.14);transform:translateY(-2px)}
+
+.btn-reset{
+  display:block;margin:18px auto 0;background:none;
+  border:1px solid rgba(255,255,255,0.14);color:var(--muted);
+  padding:9px 22px;border-radius:8px;font-size:13px;cursor:pointer;
+  font-family:inherit;transition:all .2s;
+}
+.btn-reset:hover{border-color:rgba(255,255,255,0.28);color:#fff}
+
+/* ── FEATURES ── */
+.features{
+  position:relative;z-index:1;
+  max-width:1060px;margin:0 auto;padding:72px 24px;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:20px;
+}
+.fc{
+  background:rgba(255,255,255,0.03);border:1px solid var(--border);
+  border-radius:16px;padding:30px 26px;
+  transition:border-color .28s,transform .28s;
+}
+.fc:hover{border-color:rgba(0,155,222,0.28);transform:translateY(-4px)}
+.fi{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:21px;margin-bottom:16px}
+.fi.b{background:rgba(0,155,222,0.12)}
+.fi.r{background:rgba(232,69,44,0.12)}
+.fi.p{background:rgba(123,63,160,0.12)}
+.fc h3{font-size:.95rem;font-weight:600;margin-bottom:7px}
+.fc p{font-size:.85rem;color:var(--muted);line-height:1.65}
+
+/* ── FOOTER ── */
+footer{
+  position:relative;z-index:1;
+  border-top:1px solid var(--line);padding:28px 48px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.fl{font-size:14px;font-weight:600;color:rgba(255,255,255,.45)}
+.fl span{color:var(--blue)}
+footer p{font-size:12px;color:rgba(255,255,255,.28)}
+
+/* anims */
+@keyframes up{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+
+/* responsive */
+@media(max-width:620px){
+  nav{padding:14px 18px}
+  .nav-right a{display:none}
+  .sgrid,.dl-row{grid-template-columns:1fr}
+  .features{grid-template-columns:1fr}
+  footer{flex-direction:column;gap:10px;text-align:center}
+  .stats{gap:22px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/">
+    <div class="logo-badge">t]</div>
+    <div class="logo-name">integrity<span>check</span></div>
+  </a>
+  <div class="nav-right">
+    <a href="#features">Features</a>
+    <a href="#">About</a>
+    <button class="nav-cta" onclick="document.getElementById('fi').click()">Check Document</button>
+  </div>
+</nav>
+
+<section class="hero" id="top">
+  <div class="badge"><div class="badge-dot"></div>Advanced AI + Plagiarism Detection</div>
+  <h1>Instant <em>Originality</em><br/>& AI Writing Reports</h1>
+  <p class="hero-sub">Upload your document and receive professionally formatted similarity and AI-writing reports — modelled on industry-standard integrity tools.</p>
+
+  <div class="stats">
+    <div class="stat"><div class="n">99%</div><div class="l">Detection Accuracy</div></div>
+    <div class="stat"><div class="n">14B+</div><div class="l">Pages Indexed</div></div>
+    <div class="stat"><div class="n">&lt;30s</div><div class="l">Report Time</div></div>
+  </div>
+
+  <!-- Upload -->
+  <div class="upload-wrap" id="upWrap">
+    <div class="drop-card" id="dropCard"
+         ondragover="ev.preventDefault();this.classList.add('over')"
+         ondragleave="this.classList.remove('over')"
+         ondrop="this.classList.remove('over');handleDrop(event)">
+      <div class="upload-icon">📄</div>
+      <h3>Drop your document here</h3>
+      <p class="sub">or click Browse to select from your device</p>
+      <p class="fmt">PDF · DOCX · DOC · TXT &nbsp;·&nbsp; Max 16 MB</p>
+      <button class="btn-browse" onclick="document.getElementById('fi').click()">📁 Browse Files</button>
+      <input type="file" id="fi" accept=".pdf,.doc,.docx,.txt" onchange="handleFile(this.files[0])"/>
+      <div class="prog-wrap" id="pw">
+        <div class="prog-bg"><div class="prog-fill" id="pf"></div></div>
+        <div class="prog-txt" id="pt">Analysing…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+    <div class="res-title">
+      <h2>Analysis Complete ✓</h2>
+      <p id="rFile"></p>
+    </div>
+    <div class="meta-strip" id="rMeta"></div>
+    <div class="sgrid">
+      <div class="sc sim">
+        <div class="lbl">Similarity Index</div>
+        <div class="big" id="rSim">—</div>
+        <div class="sub-row">
+          <div class="ss i"><div class="v" id="rInt">—</div><div class="l">Internet</div></div>
+          <div class="ss p"><div class="v" id="rPub">—</div><div class="l">Publications</div></div>
+          <div class="ss s"><div class="v" id="rStu">—</div><div class="l">Student Papers</div></div>
+        </div>
+      </div>
+      <div class="sc ai">
+        <div class="lbl">AI Writing Detected</div>
+        <div class="big" id="rAI">—</div>
+        <div class="ai-prog"><div class="ai-prog-fill" id="rAIbar"></div></div>
+        <div class="ai-note" id="rAInote"></div>
+      </div>
+    </div>
+    <div class="dl-row">
+      <a class="dl-btn sim" id="dlSim" href="#">📋 Download Similarity Report</a>
+      <a class="dl-btn ai"  id="dlAI"  href="#">🤖 Download AI Writing Report</a>
+    </div>
+    <button class="btn-reset" onclick="resetAll()">↩ Check Another Document</button>
+  </div>
+</section>
+
+<section class="features" id="features">
+  <div class="fc"><div class="fi b">🔍</div><h3>Deep Similarity Scan</h3><p>Cross-references billions of web pages, academic publications, and student paper databases to surface exact and paraphrased matches with coloured source attribution.</p></div>
+  <div class="fc"><div class="fi b">🤖</div><h3>AI Content Detection</h3><p>Identifies text likely generated by large language models — GPT-4, Claude, Gemini and more — with sentence-level cyan highlighting in the downloadable report.</p></div>
+  <div class="fc"><div class="fi r">📄</div><h3>Professional PDF Reports</h3><p>Download detailed reports with Turnitin-style colour-coded highlights, source lists, detection percentages, and page-by-page submission views.</p></div>
+  <div class="fc"><div class="fi p">⚡</div><h3>Instant Results</h3><p>Analysis completes in under 30 seconds for any document length. No waiting queues and no account registration required.</p></div>
+  <div class="fc"><div class="fi b">🔒</div><h3>Private & Secure</h3><p>Your documents are processed and immediately discarded. Nothing is stored, indexed, or shared. Complete privacy guaranteed.</p></div>
+  <div class="fc"><div class="fi r">📚</div><h3>All Formats</h3><p>Upload PDF, Word (.docx or .doc), or plain text files. Our parser handles tables, headings, footnotes, and reference lists.</p></div>
+</section>
+
+<footer>
+  <div class="fl">integrity<span>check</span></div>
+  <p>Professional document integrity analysis · For educational use</p>
+</footer>
+
+<script>
+function handleDrop(e){
+  e.preventDefault();
+  const f=e.dataTransfer.files[0];
+  if(f) handleFile(f);
+}
+function handleFile(file){
+  if(!file)return;
+  if(!/\.(pdf|doc|docx|txt)$/i.test(file.name)){alert('Please upload PDF, DOCX, DOC or TXT.');return;}
+  startUpload(file);
+}
+function startUpload(file){
+  document.getElementById('pw').style.display='block';
+  document.querySelector('.btn-browse').style.display='none';
+  document.querySelector('.drop-card h3').textContent='Analysing your document…';
+  document.querySelector('.sub').textContent='Please wait, this takes under 30 seconds';
+
+  let pct=0,si=0;
+  const steps=['Parsing document…','Scanning similarity database…','Running AI detection…','Compiling results…','Generating PDF reports…'];
+  const iv=setInterval(()=>{
+    pct=Math.min(pct+Math.random()*13,88);
+    document.getElementById('pf').style.width=pct+'%';
+    if(si<steps.length) document.getElementById('pt').textContent=steps[si++];
+  },700);
+
+  const fd=new FormData();fd.append('file',file);
+  fetch('/upload',{method:'POST',body:fd})
+    .then(r=>{if(!r.ok)throw new Error('Server error '+r.status);return r.json();})
+    .then(d=>{
+      clearInterval(iv);
+      document.getElementById('pf').style.width='100%';
+      document.getElementById('pt').textContent='Complete!';
+      setTimeout(()=>showResults(d),500);
+    })
+    .catch(err=>{clearInterval(iv);alert('Upload failed: '+err.message);resetAll();});
+}
+function showResults(d){
+  document.getElementById('upWrap').style.display='none';
+  const r=document.getElementById('results');
+  r.style.display='block';
+  document.getElementById('rFile').textContent=d.filename;
+  document.getElementById('rMeta').innerHTML=`
+    <div class="mi"><div class="k">Submission ID</div><div class="v" style="font-size:11px;opacity:.7">${d.submission_id}</div></div>
+    <div class="mi"><div class="k">Date</div><div class="v">${d.date}</div></div>
+    <div class="mi"><div class="k">Words</div><div class="v">${d.word_count.toLocaleString()}</div></div>
+    <div class="mi"><div class="k">Characters</div><div class="v">${d.char_count.toLocaleString()}</div></div>
+    <div class="mi"><div class="k">Pages</div><div class="v">${d.pages}</div></div>`;
+  document.getElementById('rSim').textContent=d.sim_index+'%';
+  document.getElementById('rInt').textContent=d.internet_pct+'%';
+  document.getElementById('rPub').textContent=d.pub_pct+'%';
+  document.getElementById('rStu').textContent=d.student_pct+'%';
+  document.getElementById('rAI').textContent=d.ai_pct+'%';
+  document.getElementById('rAInote').textContent=
+    d.ai_pct>=60?'High likelihood of AI-generated content detected.':
+    d.ai_pct>=25?'Some AI-generated content detected — review recommended.':
+    'Low AI signal — likely human-written.';
+  setTimeout(()=>{document.getElementById('rAIbar').style.width=d.ai_pct+'%';},300);
+  document.getElementById('dlSim').href='/download/'+d.sid+'/similarity';
+  document.getElementById('dlAI').href='/download/'+d.sid+'/ai';
+  r.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function resetAll(){
+  document.getElementById('results').style.display='none';
+  document.getElementById('upWrap').style.display='block';
+  document.getElementById('pw').style.display='none';
+  document.getElementById('pf').style.width='0%';
+  document.querySelector('.btn-browse').style.display='inline-flex';
+  document.querySelector('.drop-card h3').textContent='Drop your document here';
+  document.querySelector('.sub').textContent='or click Browse to select from your device';
+  document.getElementById('fi').value='';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>
